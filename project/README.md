@@ -1,7 +1,7 @@
 # hvndsdb
 
 ## 프로젝트 구조
-project (root 폴더더)
+project (root 폴더) # => 수정해도 ok
 - backend: FastAPI 백엔드
 - client: React 프론트엔드
 - unity: Unity 프로젝트
