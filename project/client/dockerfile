@@ -1,0 +1,12 @@
+FROM node:18
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "start"]
+
+## => 이미지 추후 hub에 업로드 필요 -> docker build -t hvndsdb/client .  &  docker-compose.yml 파일 사용 예정
