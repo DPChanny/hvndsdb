@@ -1,0 +1,65 @@
+# Node
+client/node_modules/
+client/.env
+client/build/
+client/dist/
+
+# VSCode
+.vscode/
+
+# 환경 변수
+.env
+*.env
+
+# Python
+backend/__pycache__/
+backend/app/__pycache__/
+backend/.venv/
+backend/venv/
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.env
+
+# FastAPI
+backend/app/*.sqlite3
+
+# Unity
+unity/Library/
+unity/Temp/
+unity/Obj/
+unity/Build/
+unity/Builds/
+unity/Logs/
+unity/MemoryCaptures/
+unity/.vs/
+unity/.idea/
+unity/*.csproj
+unity/*.sln
+unity/*.user
+unity/*.pidb
+unity/*.suo
+unity/*.unityproj
+unity/*.booproj
+unity/*.svd
+unity/*.pdb
+unity/*.mdb
+unity/*.opendb
+unity/*.VC.db
+unity/.DS_Store
+unity/*.apk
+unity/*.aab
+unity/*.app
+unity/*.xcworkspace
+unity/*.xcuserstate
+unity/*.xcuserdata
+unity/*.swp
+unity/*.tmp
+unity/*.bak
+unity/*.old
+unity/*.orig
+unity/*.log
+
+# 기타
+.DS_Store
+Thumbs.db
+*.log 
