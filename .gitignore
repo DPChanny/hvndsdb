@@ -1,5 +1,5 @@
 data/**
 
 !data/
-!data/**/
-!data/**/sample.mp4
+!data/*test*/
+!data/*test*/sample.mp4

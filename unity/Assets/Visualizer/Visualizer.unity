@@ -166,24 +166,13 @@ MonoBehaviour:
   m_IsGlobal: 1
   fadeRadius: 0
   priority: 0
-  customPasses:
-  - rid: 5105713144799166532
+  customPasses: []
   injectionPoint: 3
   m_TargetCamera: {fileID: 0}
   useTargetCamera: 0
   references:
     version: 2
-    RefIds:
-    - rid: 5105713144799166532
-      type: {class: GaussianSplatHDRPPass, ns: GaussianSplatting.Runtime, asm: GaussianSplatting}
-      data:
-        m_Name: Custom Pass
-        enabled: 1
-        targetColorBuffer: 0
-        targetDepthBuffer: 0
-        clearFlags: 0
-        passFoldout: 0
-        m_Version: 0
+    RefIds: []
 --- !u!1 &454441855
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,7 +275,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 957148867}
-  - component: {fileID: 957148868}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -309,22 +297,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &957148868
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 957148866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bc1928bf0a98984a822ef3edd262f03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  buildingId: 
-  gsrs: {fileID: 1212088537}
-  gsrdp: {fileID: 996933698}
-  gsrdpi: {fileID: 851562374}
 --- !u!1 &996933697
 GameObject:
   m_ObjectHideFlags: 0
