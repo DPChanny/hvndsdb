@@ -3,7 +3,7 @@ from .utils.colmap_csv_converter import convert_colmap_to_csv
 import subprocess
 import os
 
-def main():
+def main(args):
     print("Convert COLMAP data to CSV")
     csv_path = convert_colmap_to_csv(args.colmap_root, args.frames_root)
 
@@ -26,4 +26,5 @@ if __name__ == "__main__":
     parser.add_argument('--project_root', default='/content/project')
     parser.add_argument('--resume', action='store_true')
     args = parser.parse_args()
-    main()
+    
+    main(args)
