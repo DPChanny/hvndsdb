@@ -7,6 +7,7 @@ using GaussianSplatting.Runtime;
 using Main;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.Serialization;
 
 namespace Visualizer

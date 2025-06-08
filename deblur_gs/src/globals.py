@@ -24,10 +24,10 @@ class DeblurGSSession:
         )
 
     def start_deblur_gs_task(
-            self,
-            frames_url: str,
-            colmap_url: str,
-            deblur_gs_url: Optional[str] = None,
+        self,
+        frames_url: str,
+        colmap_url: str,
+        deblur_gs_url: Optional[str] = None,
     ):
         from tasks import deblur_gs_task
 

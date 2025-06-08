@@ -32,12 +32,12 @@ async def run(building_id: str):
 
     if FRAMES:
         if await frames_task.run(
-                building_id,
-                get_presigned_download_url(building_id + "/sample.mp4"),
-                get_presigned_upload_url(
-                    building_id + "/frames.zip",
-                    "application/zip",
-                ),
+            building_id,
+            get_presigned_download_url(building_id + "/sample.mp4"),
+            get_presigned_upload_url(
+                building_id + "/frames.zip",
+                "application/zip",
+            ),
         ):
             await analyzer_manager.update_progress(
                 building_id, "Frames extraction failed."
@@ -46,16 +46,16 @@ async def run(building_id: str):
 
     if COLMAP:
         if await colmap_task.run(
-                building_id,
-                get_presigned_upload_url(
-                    building_id + "/colmap.zip",
-                    "application/zip",
-                ),
-                (
-                        get_presigned_download_url(building_id + "/frames.zip")
-                        if not FRAMES
-                        else None
-                ),
+            building_id,
+            get_presigned_upload_url(
+                building_id + "/colmap.zip",
+                "application/zip",
+            ),
+            (
+                get_presigned_download_url(building_id + "/frames.zip")
+                if not FRAMES
+                else None
+            ),
         ):
             await analyzer_manager.update_progress(
                 building_id, "COLMAP extraction failed."
@@ -68,10 +68,10 @@ async def run(building_id: str):
             deblur_gs_client_id
         ).get_session(building_id)
         center_session_id = (
-                "unity-center-" + building_id + "-" + uuid.uuid4().hex
+            "unity-center-" + building_id + "-" + uuid.uuid4().hex
         )
         around_session_id = (
-                "unity-around-" + building_id + "-" + uuid.uuid4().hex
+            "unity-around-" + building_id + "-" + uuid.uuid4().hex
         )
         center_client_id = await unity_manager.start_session(center_session_id)
         around_client_id = await unity_manager.start_session(around_session_id)

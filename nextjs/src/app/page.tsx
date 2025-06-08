@@ -47,7 +47,7 @@ export default function BuildingMapPage() {
     return () => ws.current?.close();
   }, []);
 
-  const closeModal = () => router.push(pathname);
+  const closeModal = () => router.replace(pathname);
 
   return (
     <div className="w-full h-screen relative">

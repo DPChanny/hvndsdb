@@ -33,8 +33,6 @@ async def run(
             deblur_gs_path,
             "-i",
             frames_path,
-            "--iterations",
-            str(iteration),
             "--test_iterations",
             "-1",
             "--deblur",
@@ -54,6 +52,11 @@ async def run(
         start_checkpoint = (
             start_checkpoint if start_checkpoint is not None else 0
         )
+
+        cmd += [
+            "--iterations",
+            str(start_checkpoint + iteration),
+        ]
 
         cmd += [
             "--save_iterations",
