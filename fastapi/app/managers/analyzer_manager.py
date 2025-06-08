@@ -5,7 +5,7 @@ from dtos.analyzer_dto import (
     CenterFrameDTO,
     ProgressDTO,
 )
-from dtos.base_dto import BaseWebSocketDTO
+from dtos.base_dto import BaseWebSocketDTO, BaseEndSessionDTO
 from managers.web_socket_manager import (
     WebSocketManager,
     WebsocketSession,
@@ -48,15 +48,27 @@ class AnalyzerManager(WebSocketManager):
         super().__init__(AnalyzerClient, AnalyzerSession)
         self._analyzer_tasks: dict[str, asyncio.Task] = {}
 
+    async def _handle_task_done(self, building_id: str):
+        self._analyzer_tasks.pop(building_id)
+
+        for client in self._clients.values():
+            if client.has_session(building_id):
+                await client.end_session(
+                    building_id,
+                    BaseWebSocketDTO[BaseEndSessionDTO](
+                        data=BaseEndSessionDTO(session_id=building_id)
+                    ),
+                )
+
     def start_analyzer_task(self, building_id: str):
         if building_id in self._analyzer_tasks:
             raise LookupError(f"Analyzer task {building_id} already exists")
 
-        self._analyzer_tasks[building_id] = asyncio.create_task(
-            analyzer_task.run(building_id)
-        )
-        self._analyzer_tasks[building_id].add_done_callback(
-            lambda t: self._analyzer_tasks.pop(building_id)
+        task = asyncio.create_task(analyzer_task.run(building_id))
+        self._analyzer_tasks[building_id] = task
+
+        task.add_done_callback(
+            lambda t: asyncio.create_task(self._handle_task_done(building_id))
         )
 
     def has_analyzer_task(self, building_id: str) -> bool:

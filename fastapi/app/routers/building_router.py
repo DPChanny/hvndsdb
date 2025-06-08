@@ -1,4 +1,3 @@
-from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from utils.database import get_db
@@ -16,6 +15,7 @@ from services.building_service import (
     update_building_service,
     delete_building_service,
     get_building_detail_service,
+    get_sample_url_service,
 )
 
 building_router = APIRouter()
@@ -23,14 +23,14 @@ building_router = APIRouter()
 
 @building_router.post("/", response_model=GetBuildingDetailResponseDTO)
 def add_building_route(
-    dto: AddBuildingRequestDTO, db: Session = Depends(get_db)
+        dto: AddBuildingRequestDTO, db: Session = Depends(get_db)
 ):
     return add_building_service(dto, db)
 
 
 @building_router.get("/", response_model=GetBuildingListResponseDTO)
 def get_building_list_route(
-    query: str = Query(None), db: Session = Depends(get_db)
+        query: str = Query(None), db: Session = Depends(get_db)
 ):
     return get_building_list_service(GetBuildingListRequestDTO(query=query), db)
 
@@ -38,7 +38,7 @@ def get_building_list_route(
 @building_router.get(
     "/{building_id}", response_model=GetBuildingDetailResponseDTO
 )
-def get_building_detail_route(building_id: UUID, db: Session = Depends(get_db)):
+def get_building_detail_route(building_id: str, db: Session = Depends(get_db)):
     return get_building_detail_service(building_id, db)
 
 
@@ -46,13 +46,20 @@ def get_building_detail_route(building_id: UUID, db: Session = Depends(get_db)):
     "/{building_id}", response_model=GetBuildingDetailResponseDTO
 )
 def update_building_route(
-    building_id: UUID,
-    dto: UpdateBuildingRequestDTO,
-    db: Session = Depends(get_db),
+        building_id: str,
+        dto: UpdateBuildingRequestDTO,
+        db: Session = Depends(get_db),
 ):
     return update_building_service(building_id, dto, db)
 
 
 @building_router.delete("/{building_id}", response_model=BaseResponseDTO[None])
-def delete_building_route(building_id: UUID, db: Session = Depends(get_db)):
+def delete_building_route(building_id: str, db: Session = Depends(get_db)):
     return delete_building_service(building_id, db)
+
+
+@building_router.get(
+    "/{building_id}/sample", response_model=BaseResponseDTO[str]
+)
+def get_sample_url_route(building_id: str, db: Session = Depends(get_db)):
+    return get_sample_url_service(building_id)

@@ -291,7 +291,7 @@ namespace GaussianSplatting.Editor
                 ClusterSHs(inputSplats, m_FormatSH, out clusteredSHs, out splatSHIndices);
             }
 
-            string baseName = Path.GetFileNameWithoutExtension(FilePickerControl.PathToDisplayString(m_InputFile));
+            string baseName = "point_cloud";
 
             EditorUtility.DisplayProgressBar(kProgressTitle, "Creating data objects", 0.7f);
             GaussianSplatAsset asset = ScriptableObject.CreateInstance<GaussianSplatAsset>();

@@ -54,6 +54,8 @@ class WebsocketClient:
         session.set_ended()
         await self.send(dto)
 
+        self._sessions.pop(session_id)
+
     async def end(self):
         if self._websocket.client_state != WebSocketState.DISCONNECTED:
             await self._websocket.close()
@@ -117,4 +119,5 @@ class WebSocketManager:
 
         client = self.get_client(client_id)
         await client.end()
+
         self._clients.pop(client_id, None)

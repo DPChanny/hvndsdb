@@ -69,9 +69,10 @@ class DeblurGSClient:
             raise LookupError(f"No session found {session_id}")
         return session
 
-    async def end_session(self, session_id: str):
+    def end_session(self, session_id: str):
         if session_id not in self._sessions:
             raise LookupError(f"No session found {session_id}")
+        self._sessions.pop(session_id)
 
     async def send(self, dto: BaseWebSocketDTO):
         print(f"Sending {dto.json()}")

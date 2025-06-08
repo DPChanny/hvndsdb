@@ -41,11 +41,14 @@ class BaseEndSessionDTO(BaseSessionDataDTO):
     type: ClassVar[str] = "end_session"
 
 
-class BaseResponseDTO(BaseModel, Generic[T]):
+D = TypeVar("D")
+
+
+class BaseResponseDTO(BaseModel, Generic[D]):
     success: bool
     code: int
     message: str
-    data: Optional[T] = None
+    data: Optional[D] = None
 
 
 class TimeMixin(BaseModel):

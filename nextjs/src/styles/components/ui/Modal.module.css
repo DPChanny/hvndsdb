@@ -1,0 +1,66 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  padding: var(--space-2xl);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* Tone Variants */
+.modal--solid {
+  background-color: var(--color-surface);
+  border: none;
+}
+
+.modal--outline {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.modal--ghost {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: none;
+}
+
+/* Size Variants */
+.modal--sm {
+  max-width: 320px; /* ~20rem */
+}
+
+.modal--md {
+  max-width: 448px; /* ~28rem */
+}
+
+.modal--lg {
+  max-width: 672px; /* ~42rem */
+}
+
+/* Close Button */
+.closeButton {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: none;
+  border: none;
+  font-size: var(--text-xl);
+  color: var(--color-icon-muted);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: var(--color-icon);
+}

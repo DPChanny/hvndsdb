@@ -14,6 +14,7 @@ from dto import (
     CancelSessionDTO,
     CancelSessionCompleteDTO,
     PLYUrlResponseDTO,
+    BaseEndSessionDTO,
 )
 from envs import TEMP
 from globals import get_client
@@ -61,3 +62,7 @@ async def ply_url_response_service(dto: PLYUrlResponseDTO):
     await upload_file_to_presigned_url(
         dto.ply_url, ply, "application/octet-stream"
     )
+
+
+def end_session_service(dto: BaseEndSessionDTO):
+    get_client().end_session(dto.session_id)

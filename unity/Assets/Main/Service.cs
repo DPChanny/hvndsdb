@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -91,6 +92,8 @@ namespace Main
 
             if (Directory.Exists(streamingPath))
                 Directory.Delete(streamingPath, true);
+            
+            AssetDatabase.Refresh();
         }
     }
 

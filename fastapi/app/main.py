@@ -10,7 +10,6 @@ from routers.analyzer_router import analyzer_router
 from routers.building_router import building_router
 from routers.deblur_gs_router import deblur_gs_router
 from routers.unity_router import unity_router
-from routers.user_router import user_router
 from utils.exception import (
     CustomException,
     custom_exception_handler,
@@ -46,7 +45,7 @@ logger.setLevel(logging.INFO)
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
     formatter = LineTruncatingFormatter(
-        "%(filename)s.%(funcName)s():%(lineno)d\n%(message)s"
+        "%(filename)s %(funcName)s():%(lineno)d\n%(message)s"
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -68,7 +67,6 @@ def on_startup():
     database.Base.metadata.create_all(bind=database.engine)
 
 
-app.include_router(user_router, prefix="/api/user")
 app.include_router(building_router, prefix="/api/building")
 
 app.include_router(analyzer_router, prefix="/ws/analyzer")
