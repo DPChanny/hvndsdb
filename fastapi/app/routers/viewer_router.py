@@ -5,27 +5,25 @@ from fastapi import APIRouter, WebSocket
 from fastapi.logger import logger
 from starlette.requests import ClientDisconnect
 
-from dtos.analyzer_dto import (
-    CancelDeblurGS,
+from dtos.viewer_dto import (
     StartSessionRequestDTO,
     EndSessionRequestDTO,
-    CancelPosenet,
+    FrameDTO,
 )
-from managers import analyzer_manager
-from services.analyzer_service import (
+from managers import viewer_manager
+from services.viewer_service import (
     start_session_request_service,
-    cancel_deblur_gs_service,
     end_session_request_service,
-    cancel_posenet_service,
+    frame_service,
 )
 
-analyzer_router = APIRouter()
+viewer_router = APIRouter()
 
 
-@analyzer_router.websocket("")
-async def analyzer_route(websocket: WebSocket):
-    client_id = "analyzer-" + websocket.client.host + "-" + uuid.uuid4().hex
-    await analyzer_manager.start_client(client_id, websocket)
+@viewer_router.websocket("")
+async def viewer_route(websocket: WebSocket):
+    client_id = "viewer-" + websocket.client.host + "-" + uuid.uuid4().hex
+    await viewer_manager.start_client(client_id, websocket)
 
     try:
         while True:
@@ -41,13 +39,9 @@ async def analyzer_route(websocket: WebSocket):
                 await end_session_request_service(
                     client_id, EndSessionRequestDTO.model_validate(dto_data)
                 )
-            elif dto_type == CancelDeblurGS.type:
-                await cancel_deblur_gs_service(
-                    CancelDeblurGS.model_validate(dto_data)
-                )
-            elif dto_type == CancelPosenet.type:
-                await cancel_posenet_service(
-                    CancelPosenet.model_validate(dto_data)
+            elif dto_type == FrameDTO.type:
+                await frame_service(
+                    client_id, FrameDTO.model_validate(dto_data)
                 )
             else:
                 logger.error(f"Unknown DTO type {dto_type}")
@@ -56,4 +50,4 @@ async def analyzer_route(websocket: WebSocket):
     except Exception as e:
         logger.error(f"Unhandled Exception {e}")
     finally:
-        await analyzer_manager.end_client(client_id)
+        await viewer_manager.end_client(client_id)

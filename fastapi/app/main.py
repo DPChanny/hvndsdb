@@ -10,6 +10,8 @@ from routers.analyzer_router import analyzer_router
 from routers.building_router import building_router
 from routers.deblur_gs_router import deblur_gs_router
 from routers.unity_router import unity_router
+from routers.posenet_router import posenet_router
+from routers.viewer_router import viewer_router
 from utils.exception import (
     CustomException,
     custom_exception_handler,
@@ -71,7 +73,9 @@ app.include_router(building_router, prefix="/api/building")
 
 app.include_router(analyzer_router, prefix="/ws/analyzer")
 app.include_router(unity_router, prefix="/ws/unity")
+app.include_router(posenet_router, prefix="/ws/posenet")
 app.include_router(deblur_gs_router, prefix="/ws/deblur_gs")
+app.include_router(viewer_router, prefix="/ws/viewer")
 
 app.add_exception_handler(CustomException, custom_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)

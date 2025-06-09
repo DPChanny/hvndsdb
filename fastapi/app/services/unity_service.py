@@ -4,7 +4,7 @@ from managers import unity_manager
 from managers.unity_manager import UnitySession
 
 
-async def ready_service(client_id: str, dto: BaseSessionReadyDTO):
+def session_ready_service(client_id: str, dto: BaseSessionReadyDTO):
     unity_manager.get_client(client_id).get_session(dto.session_id).set_ready()
 
 

@@ -9,7 +9,7 @@ from dtos.base_dto import BaseSessionReadyDTO
 from dtos.unity_dto import FrameDTO
 from managers import unity_manager
 from services.unity_service import (
-    ready_service,
+    session_ready_service,
     frame_service,
 )
 
@@ -28,7 +28,7 @@ async def unity_route(websocket: WebSocket):
             dto_data = message.get("data", {})
 
             if dto_type == BaseSessionReadyDTO.type:
-                await ready_service(
+                session_ready_service(
                     client_id, BaseSessionReadyDTO.model_validate(dto_data)
                 )
             elif dto_type == FrameDTO.type:

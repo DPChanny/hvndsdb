@@ -8,9 +8,16 @@ dependencies:
   - python=3.7.13
   - pip
   - pytorch=1.12.1
-  - torchvision=0.13.1
   - torchaudio=0.12.1
+  - torchvision=0.13.1
   - pandas
   - pillow
   - tqdm
   - matplotlib
+  - pydantic
+  - python-dotenv
+  - websockets
+  - black
+  - pip:
+      - ../libs/posenet
+      - ../libs/downloader

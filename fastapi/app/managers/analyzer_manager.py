@@ -4,6 +4,8 @@ from dtos.analyzer_dto import (
     AroundFrameDTO,
     CenterFrameDTO,
     ProgressDTO,
+    PosenetProgressDTO,
+    DeblurGSProgressDTO,
 )
 from dtos.base_dto import BaseWebSocketDTO, BaseEndSessionDTO
 from managers.web_socket_manager import (
@@ -19,6 +21,24 @@ class AnalyzerClient(WebsocketClient):
         await self.send(
             BaseWebSocketDTO[ProgressDTO](
                 data=ProgressDTO(progress=progress, session_id=building_id)
+            )
+        )
+
+    async def update_posenet_progress(self, building_id: str, progress: str):
+        await self.send(
+            BaseWebSocketDTO[PosenetProgressDTO](
+                data=PosenetProgressDTO(
+                    progress=progress, session_id=building_id
+                )
+            )
+        )
+
+    async def update_deblur_gs_progress(self, building_id: str, progress: str):
+        await self.send(
+            BaseWebSocketDTO[DeblurGSProgressDTO](
+                data=DeblurGSProgressDTO(
+                    progress=progress, session_id=building_id
+                )
             )
         )
 
@@ -85,6 +105,16 @@ class AnalyzerManager(WebSocketManager):
         for client in list(self._clients.values()):
             if client.has_session(building_id):
                 await client.update_progress(building_id, progress)
+
+    async def update_deblur_gs_progress(self, building_id: str, progress: str):
+        for client in list(self._clients.values()):
+            if client.has_session(building_id):
+                await client.update_deblur_gs_progress(building_id, progress)
+
+    async def update_posenet_progress(self, building_id: str, progress: str):
+        for client in list(self._clients.values()):
+            if client.has_session(building_id):
+                await client.update_posenet_progress(building_id, progress)
 
     async def update_center_frame(self, building_id: str, frame: str):
         for client in list(self._clients.values()):

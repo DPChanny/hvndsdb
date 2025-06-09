@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using NativeWebSocket;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,7 +15,12 @@ namespace Main
         public static readonly Dictionary<string, Scene> SessionToScene = new();
         
         public static WebSocket WebSocket;
-        
+
+        private void Awake()
+        {
+            PlayerSettings.runInBackground = true;   
+        }
+
         private static async Task HandleMessage(string message)
         {
             try

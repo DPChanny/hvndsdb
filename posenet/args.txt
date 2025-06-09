@@ -1,0 +1,58 @@
+optional arguments:
+  -h, --help            show this help message and exit
+  --ip IP
+  --port PORT
+  --debug_from DEBUG_FROM
+  --detect_anomaly
+  --test_iterations TEST_ITERATIONS [TEST_ITERATIONS ...]
+  --save_iterations SAVE_ITERATIONS [SAVE_ITERATIONS ...]
+  --quiet
+  --checkpoint_iterations CHECKPOINT_ITERATIONS [CHECKPOINT_ITERATIONS ...]
+  --start_checkpoint START_CHECKPOINT
+  --device DEVICE
+
+Loading Parameters:
+  --sh_degree SH_DEGREE
+  --source_path SOURCE_PATH, -s SOURCE_PATH
+  --model_path MODEL_PATH, -m MODEL_PATH
+  --images IMAGES, -i IMAGES
+  --resolution RESOLUTION, -r RESOLUTION
+  --white_background, -w
+  --data_device DATA_DEVICE
+  --bezier_order BEZIER_ORDER
+  --mode MODE
+  --eval
+  --visdom_server VISDOM_SERVER
+  --visdom_port VISDOM_PORT
+
+Optimization Parameters:
+  --iterations ITERATIONS
+  --position_lr_init POSITION_LR_INIT
+  --position_lr_final POSITION_LR_FINAL
+  --position_lr_delay_mult POSITION_LR_DELAY_MULT
+  --position_lr_max_steps POSITION_LR_MAX_STEPS
+  --feature_lr FEATURE_LR
+  --opacity_lr OPACITY_LR
+  --scaling_lr SCALING_LR
+  --rotation_lr ROTATION_LR
+  --percent_dense PERCENT_DENSE
+  --lambda_dssim LAMBDA_DSSIM
+  --densification_interval DENSIFICATION_INTERVAL
+  --opacity_reset_interval OPACITY_RESET_INTERVAL
+  --sh_up_degree_interval SH_UP_DEGREE_INTERVAL
+  --densify_from_iter DENSIFY_FROM_ITER
+  --densify_until_iter DENSIFY_UNTIL_ITER
+  --densify_grad_threshold DENSIFY_GRAD_THRESHOLD
+  --random_background
+  --depth_weight DEPTH_WEIGHT
+  --per_rgb_weight PER_RGB_WEIGHT
+  --blur_sample_num BLUR_SAMPLE_NUM
+  --deblur
+  --depth_reg
+  --ground_truth
+  --non_uniform
+
+Pipeline Parameters:
+  --convert_SHs_python
+  --compute_cov3D_python
+  --debug

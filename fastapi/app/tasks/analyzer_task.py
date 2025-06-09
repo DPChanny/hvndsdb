@@ -6,6 +6,7 @@ import uuid
 from fastapi.logger import logger
 
 from dtos.base_dto import BaseEndSessionDTO, BaseWebSocketDTO
+from dtos.posenet_dto import StartTrainDTO
 from tasks import (
     frames_task,
     colmap_task,
@@ -22,7 +23,12 @@ from utils.s3 import (
 
 
 async def run(building_id: str):
-    from managers import deblur_gs_manager, unity_manager, analyzer_manager
+    from managers import (
+        deblur_gs_manager,
+        unity_manager,
+        analyzer_manager,
+        posenet_manager,
+    )
 
     FRAMES = not is_key_exists(building_id + "/frames.zip")
     COLMAP = not is_key_exists(building_id + "/colmap.zip")
@@ -32,12 +38,12 @@ async def run(building_id: str):
 
     if FRAMES:
         if await frames_task.run(
-            building_id,
-            get_presigned_download_url(building_id + "/sample.mp4"),
-            get_presigned_upload_url(
-                building_id + "/frames.zip",
-                "application/zip",
-            ),
+                building_id,
+                get_presigned_download_url(building_id + "/sample.mp4"),
+                get_presigned_upload_url(
+                    building_id + "/frames.zip",
+                    "application/zip",
+                ),
         ):
             await analyzer_manager.update_progress(
                 building_id, "Frames extraction failed."
@@ -46,16 +52,16 @@ async def run(building_id: str):
 
     if COLMAP:
         if await colmap_task.run(
-            building_id,
-            get_presigned_upload_url(
-                building_id + "/colmap.zip",
-                "application/zip",
-            ),
-            (
-                get_presigned_download_url(building_id + "/frames.zip")
-                if not FRAMES
-                else None
-            ),
+                building_id,
+                get_presigned_upload_url(
+                    building_id + "/colmap.zip",
+                    "application/zip",
+                ),
+                (
+                        get_presigned_download_url(building_id + "/frames.zip")
+                        if not FRAMES
+                        else None
+                ),
         ):
             await analyzer_manager.update_progress(
                 building_id, "COLMAP extraction failed."
@@ -67,11 +73,19 @@ async def run(building_id: str):
         deblur_gs_session = deblur_gs_manager.get_client(
             deblur_gs_client_id
         ).get_session(building_id)
+
+        posenet_client_id = await posenet_manager.start_train_session(
+            building_id
+        )
+        posenet_session = posenet_manager.get_client(
+            posenet_client_id
+        ).get_session(building_id)
+
         center_session_id = (
-            "unity-center-" + building_id + "-" + uuid.uuid4().hex
+                "unity-center-" + building_id + "-" + uuid.uuid4().hex
         )
         around_session_id = (
-            "unity-around-" + building_id + "-" + uuid.uuid4().hex
+                "unity-around-" + building_id + "-" + uuid.uuid4().hex
         )
         center_client_id = await unity_manager.start_session(center_session_id)
         around_client_id = await unity_manager.start_session(around_session_id)
@@ -87,7 +101,18 @@ async def run(building_id: str):
                 progress = await deblur_gs_session.get_progress()
                 if progress is None:
                     break
-                await analyzer_manager.update_progress(building_id, progress)
+                await analyzer_manager.update_deblur_gs_progress(
+                    building_id, progress
+                )
+
+        async def update_posenet_progress():
+            while True:
+                progress = await posenet_session.get_progress()
+                if progress is None:
+                    break
+                await analyzer_manager.update_posenet_progress(
+                    building_id, progress
+                )
 
         async def update_center_frame():
             while True:
@@ -125,6 +150,7 @@ async def run(building_id: str):
                 raise
 
         asyncio.create_task(update_deblur_gs_progress())
+        asyncio.create_task(update_posenet_progress())
         asyncio.create_task(update_center_frame())
         asyncio.create_task(update_around_frame())
         session_update_center_transform_task = asyncio.create_task(
@@ -139,7 +165,17 @@ async def run(building_id: str):
         )
         update_unity_ply_task = asyncio.create_task(update_unity_ply())
 
+        await deblur_gs_session.wait_ready()
+        await posenet_session.wait_ready()
+
+        await posenet_manager.get_client(posenet_client_id).send(
+            BaseWebSocketDTO[StartTrainDTO](
+                data=StartTrainDTO(session_id=building_id)
+            )
+        )
+
         await deblur_gs_session.wait_ended()
+        await posenet_session.wait_ended()
 
         session_update_center_transform_task.cancel()
         try:
@@ -171,6 +207,7 @@ async def run(building_id: str):
                 data=BaseEndSessionDTO(session_id=around_session_id)
             ),
         )
+
     except Exception as e:
         logger.error(f"Analyzer worker failed {e}")
 

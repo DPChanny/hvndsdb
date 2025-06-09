@@ -44,6 +44,16 @@
         "kind": "test",
         "isDefault": false
       }
+    },
+    {
+      "label": "Run Posenet",
+      "type": "shell",
+      "command": "./posenet/run.bat",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
     }
   ]
 }

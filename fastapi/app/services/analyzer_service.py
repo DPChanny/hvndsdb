@@ -2,13 +2,14 @@ from dtos.analyzer_dto import (
     CancelDeblurGS,
     StartSessionRequestDTO,
     EndSessionRequestDTO,
+    CancelPosenet,
 )
 from dtos.base_dto import (
     BaseStartSessionDTO,
     BaseWebSocketDTO,
     BaseEndSessionDTO,
 )
-from managers import analyzer_manager, deblur_gs_manager
+from managers import analyzer_manager, deblur_gs_manager, posenet_manager
 
 
 async def start_session_request_service(
@@ -44,3 +45,7 @@ async def end_session_request_service(
 
 async def cancel_deblur_gs_service(dto: CancelDeblurGS):
     await deblur_gs_manager.cancel_session(dto.session_id)
+
+
+async def cancel_posenet_service(dto: CancelPosenet):
+    await posenet_manager.cancel_session(dto.session_id)

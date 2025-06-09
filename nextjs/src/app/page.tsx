@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { AddBuildingForm } from "@/components/custom/AddBuildingForm";
 import { AnalyzerPanel } from "@/components/custom/AnalyzerPanel";
 import { BuildingPanel } from "@/components/custom/BuildingPanel";
+import { ViewerPanel } from "@/components/custom/ViewerPanel";
 import { Plus } from "lucide-react";
 
 const MapView = dynamic(() => import("@/components/custom/MapView"), {
@@ -22,7 +23,7 @@ export default function BuildingMapPage() {
 
   const { data, isLoading } = useBuildingList();
   const buildingId = params.get("buildingId");
-  const modalType = params.get("modal"); // "detail", "add", "analyze"
+  const modalType = params.get("modal");
 
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(
     null
@@ -37,14 +38,24 @@ export default function BuildingMapPage() {
 
   const buildings: Building[] = data?.data ?? [];
 
-  // WebSocket
-  const ws = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const viewerWebSocket = useRef<WebSocket | null>(null);
+  const [isViewerConnected, setIsViewerConnected] = useState(false);
   useEffect(() => {
-    ws.current = new WebSocket("ws://127.0.0.1:8000/ws/analyzer");
-    ws.current.onopen = () => setIsConnected(true);
-    ws.current.onclose = () => setIsConnected(false);
-    return () => ws.current?.close();
+    viewerWebSocket.current = new WebSocket("ws://127.0.0.1:8000/ws/viewer");
+    viewerWebSocket.current.onopen = () => setIsViewerConnected(true);
+    viewerWebSocket.current.onclose = () => setIsViewerConnected(false);
+    return () => viewerWebSocket.current?.close();
+  }, []);
+
+  const analyzerWebSocket = useRef<WebSocket | null>(null);
+  const [isAnalyzerConnected, setIsAnalyzerConnected] = useState(false);
+  useEffect(() => {
+    analyzerWebSocket.current = new WebSocket(
+      "ws://127.0.0.1:8000/ws/analyzer"
+    );
+    analyzerWebSocket.current.onopen = () => setIsAnalyzerConnected(true);
+    analyzerWebSocket.current.onclose = () => setIsAnalyzerConnected(false);
+    return () => analyzerWebSocket.current?.close();
   }, []);
 
   const closeModal = () => router.replace(pathname);
@@ -90,8 +101,20 @@ export default function BuildingMapPage() {
         <Modal open onClose={closeModal}>
           <h2 className="text-lg font-bold">{selectedBuilding.name}</h2>
           <AnalyzerPanel
-            ws={ws.current}
-            isConnected={isConnected}
+            ws={analyzerWebSocket.current}
+            isConnected={isAnalyzerConnected}
+            buildingId={buildingId}
+            onClose={closeModal}
+          />
+        </Modal>
+      )}
+
+      {modalType === "viewer" && buildingId && selectedBuilding && (
+        <Modal open onClose={closeModal}>
+          <h2 className="text-lg font-bold">{selectedBuilding.name}</h2>
+          <ViewerPanel
+            ws={viewerWebSocket.current}
+            isConnected={isViewerConnected}
             buildingId={buildingId}
             onClose={closeModal}
           />

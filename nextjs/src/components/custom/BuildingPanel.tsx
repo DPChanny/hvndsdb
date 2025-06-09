@@ -32,6 +32,9 @@ export function BuildingPanel({ buildingId }: Props) {
   const openAnalyzeModal = () =>
     router.push(`${pathname}?modal=analyze&buildingId=${buildingId}`);
 
+  const openViewerModal = () =>
+    router.push(`${pathname}?modal=viewer&buildingId=${buildingId}`);
+
   return (
     <div className="mt-4 space-y-6 text-sm">
       <div className="space-y-2">
@@ -75,16 +78,24 @@ export function BuildingPanel({ buildingId }: Props) {
           />
         )}
       </div>
-
       <div className="flex flex-wrap gap-3">
         {sample && (
-          <Button
-            variantIntent="secondary"
-            variantSize="sm"
-            onClick={openAnalyzeModal}
-          >
-            {analyzing ? "분석 중" : "분석 시작"}
-          </Button>
+          <>
+            <Button
+              variantIntent="secondary"
+              variantSize="sm"
+              onClick={openAnalyzeModal}
+            >
+              {analyzing ? "분석 중" : "분석 시작"}
+            </Button>
+            <Button
+              variantIntent="secondary"
+              variantSize="sm"
+              onClick={openViewerModal}
+            >
+              안내 보기
+            </Button>
+          </>
         )}
       </div>
     </div>

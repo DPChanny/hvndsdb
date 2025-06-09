@@ -3,7 +3,6 @@ import shutil
 
 from downloader import (
     upload_folder_to_presigned_url,
-    upload_file_to_presigned_url,
 )
 
 from dto import (
@@ -13,12 +12,13 @@ from dto import (
     UploadDTO,
     CancelSessionDTO,
     CancelSessionCompleteDTO,
-    PLYUrlResponseDTO,
     BaseEndSessionDTO,
+    FrameDTO,
+    StartTrainDTO,
 )
 from envs import TEMP
 from globals import get_client
-from utils import clean_deblur_gs
+from utils import clean_posenet
 
 
 def start_session_service(dto: StartSessionDTO):
@@ -27,9 +27,13 @@ def start_session_service(dto: StartSessionDTO):
 
     get_client().start_session(dto.session_id)
 
-    get_client().get_session(dto.session_id).start_deblur_gs_task(
-        dto.frames_url, dto.colmap_url, dto.deblur_gs_url
+    get_client().get_session(dto.session_id).start_downloader_task(
+        dto.frames_url, dto.colmap_url, dto.posenet_url
     )
+
+
+def start_train_service(dto: StartTrainDTO):
+    get_client().get_session(dto.session_id).start_train_task()
 
 
 async def cancel_session_service(dto: CancelSessionDTO):
@@ -43,13 +47,11 @@ async def cancel_session_service(dto: CancelSessionDTO):
 
 
 async def upload_service(dto: UploadDTO):
-    if os.path.exists(os.path.join(TEMP, dto.session_id, "deblur_gs")):
-        clean_deblur_gs(os.path.join(TEMP, dto.session_id, "deblur_gs"))
+    if os.path.exists(os.path.join(TEMP, dto.session_id, "posenet")):
+        clean_posenet(os.path.join(TEMP, dto.session_id, "posenet"))
 
         await upload_folder_to_presigned_url(
-            dto.deblur_gs_url,
-            os.path.join(TEMP, dto.session_id, "deblur_gs"),
-            TEMP,
+            dto.posenet_url, os.path.join(TEMP, dto.session_id, "posenet"), TEMP
         )
 
     await get_client().send(
@@ -59,12 +61,8 @@ async def upload_service(dto: UploadDTO):
     )
 
 
-async def ply_url_response_service(dto: PLYUrlResponseDTO):
-    ply = await get_client().get_session(dto.session_id).get_ply()
-
-    await upload_file_to_presigned_url(
-        dto.ply_url, ply, "application/octet-stream"
-    )
+async def frame_service(dto: FrameDTO):
+    await get_client().get_session(dto.session_id).infer_frame(dto.frame)
 
 
 def end_session_service(dto: BaseEndSessionDTO):
