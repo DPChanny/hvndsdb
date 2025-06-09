@@ -1,6 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
+export const dynamic = "force-dynamic";
+
+import nextDynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useBuildingList } from "@/hooks/building";
@@ -11,7 +13,7 @@ import { AnalyzerPanel } from "@/components/custom/AnalyzerPanel";
 import { BuildingPanel } from "@/components/custom/BuildingPanel";
 import { ViewerPanel } from "@/components/custom/ViewerPanel";
 
-const MapView = dynamic(() => import("@/components/custom/MapView"), {
+const MapView = nextDynamic(() => import("@/components/custom/MapView"), {
   ssr: false,
 });
 
