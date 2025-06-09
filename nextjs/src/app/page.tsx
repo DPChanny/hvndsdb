@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useBuildingList } from "@/hooks/building";
 import { Building } from "@/types";
 import { Modal } from "@/components/ui/Modal";
@@ -10,7 +10,6 @@ import { AddBuildingForm } from "@/components/custom/AddBuildingForm";
 import { AnalyzerPanel } from "@/components/custom/AnalyzerPanel";
 import { BuildingPanel } from "@/components/custom/BuildingPanel";
 import { ViewerPanel } from "@/components/custom/ViewerPanel";
-import { Plus } from "lucide-react";
 
 const MapView = dynamic(() => import("@/components/custom/MapView"), {
   ssr: false,
@@ -28,6 +27,10 @@ export default function BuildingMapPage() {
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(
     null
   );
+  const [addLatLng, setAddLatLng] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!buildingId || !data?.data) return;
@@ -41,7 +44,9 @@ export default function BuildingMapPage() {
   const viewerWebSocket = useRef<WebSocket | null>(null);
   const [isViewerConnected, setIsViewerConnected] = useState(false);
   useEffect(() => {
-    viewerWebSocket.current = new WebSocket("ws://127.0.0.1:8000/ws/viewer");
+    viewerWebSocket.current = new WebSocket(
+      `ws://${process.env.NEXT_PUBLIC_FASTAPI_HOST}:${process.env.NEXT_PUBLIC_FASTAPI_PORT}/ws/viewer`
+    );
     viewerWebSocket.current.onopen = () => setIsViewerConnected(true);
     viewerWebSocket.current.onclose = () => setIsViewerConnected(false);
     return () => viewerWebSocket.current?.close();
@@ -51,14 +56,32 @@ export default function BuildingMapPage() {
   const [isAnalyzerConnected, setIsAnalyzerConnected] = useState(false);
   useEffect(() => {
     analyzerWebSocket.current = new WebSocket(
-      "ws://127.0.0.1:8000/ws/analyzer"
+      `ws://${process.env.NEXT_PUBLIC_FASTAPI_HOST}:${process.env.NEXT_PUBLIC_FASTAPI_PORT}/ws/analyzer`
     );
     analyzerWebSocket.current.onopen = () => setIsAnalyzerConnected(true);
     analyzerWebSocket.current.onclose = () => setIsAnalyzerConnected(false);
     return () => analyzerWebSocket.current?.close();
   }, []);
 
-  const closeModal = () => router.replace(pathname);
+  const closeModal = useCallback(() => {
+    router.replace(pathname);
+    setAddLatLng(null);
+  }, [router, pathname]);
+
+  const handleAdd = useCallback(
+    (lat: number, lng: number) => {
+      if (!addLatLng) {
+        setAddLatLng({ lat, lng });
+        router.push(`${pathname}?modal=add`);
+      }
+    },
+    [router, pathname, addLatLng]
+  );
+
+  const handleAddDone = useCallback(() => {
+    closeModal();
+    setAddLatLng(null);
+  }, [closeModal]);
 
   return (
     <div className="w-full h-screen relative">
@@ -74,15 +97,9 @@ export default function BuildingMapPage() {
           onSelect={(b) =>
             router.push(`${pathname}?modal=detail&buildingId=${b.building_id}`)
           }
+          onAdd={handleAdd}
         />
       )}
-
-      <button
-        onClick={() => router.push(`${pathname}?modal=add`)}
-        className="absolute bottom-12 right-12 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700"
-      >
-        <Plus />
-      </button>
 
       {modalType === "detail" && selectedBuilding && (
         <Modal open onClose={closeModal}>
@@ -91,9 +108,13 @@ export default function BuildingMapPage() {
         </Modal>
       )}
 
-      {modalType === "add" && (
+      {modalType === "add" && addLatLng && (
         <Modal open onClose={closeModal}>
-          <AddBuildingForm onDone={closeModal} />
+          <AddBuildingForm
+            lat={addLatLng.lat}
+            lng={addLatLng.lng}
+            onDone={handleAddDone}
+          />
         </Modal>
       )}
 

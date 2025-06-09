@@ -31,20 +31,19 @@ export function ViewerPanel({
   buildingId,
   onClose,
 }: ViewerPanelProps) {
-  const [mode, setMode] = useState<"video" | "realtime">("video");
+  const [mode, setMode] = useState<"video" | "realtime">("realtime");
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [frameImage, setFrameImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const frameAckQueue = useRef<(() => void)[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const latestVideoFrameRef = useRef<HTMLVideoElement | null>(null);
+  const pendingVideoFrames = useRef<string[]>([]);
+  const isSendingVideoFrame = useRef(false);
 
   const sendMessage = useCallback(
     (message: ClientMessage) => {
       if (ws?.readyState === WebSocket.OPEN) {
-        console.log("[WebSocket] 보내는 메시지:", message);
         ws.send(JSON.stringify(message));
-      } else {
-        console.warn("[WebSocket] 연결 안 됨, 메시지 전송 실패");
       }
     },
     [ws]
@@ -56,8 +55,6 @@ export function ViewerPanel({
     const handleMessage = (event: MessageEvent<string>) => {
       try {
         const msg: ServerMessage = JSON.parse(event.data);
-        console.log("[WebSocket] 수신:", msg);
-
         if (msg.data.session_id !== buildingId) return;
 
         switch (msg.type) {
@@ -74,8 +71,19 @@ export function ViewerPanel({
             setFrameImage(`data:image/jpeg;base64,${msg.data.frame}`);
             break;
           case "frame_complete":
-            const resolver = frameAckQueue.current.shift();
-            if (resolver) resolver();
+            if (mode === "video") {
+              const nextFrame = pendingVideoFrames.current.shift();
+              if (nextFrame) {
+                sendMessage({
+                  type: "frame",
+                  data: { session_id: buildingId, frame: nextFrame },
+                });
+              } else {
+                isSendingVideoFrame.current = false;
+              }
+            } else if (mode === "realtime") {
+              sendRealtimeFrame();
+            }
             break;
         }
       } catch (err) {
@@ -93,10 +101,7 @@ export function ViewerPanel({
       ws.removeEventListener("message", handleMessage);
       stopStream();
     };
-  }, [ws, buildingId, sendMessage, onClose]);
-
-  const waitForFrameAck = (): Promise<void> =>
-    new Promise((res) => frameAckQueue.current.push(res));
+  }, [ws, buildingId, sendMessage, onClose, mode]);
 
   const stopStream = () => {
     if (streamRef.current) {
@@ -105,11 +110,7 @@ export function ViewerPanel({
     }
   };
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !ws || ws.readyState !== WebSocket.OPEN || !isSessionActive)
-      return;
-
+  const handleVideoUpload = async (file: File) => {
     setIsUploading(true);
     const videoURL = URL.createObjectURL(file);
     const video = document.createElement("video");
@@ -129,7 +130,7 @@ export function ViewerPanel({
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    const fps = 1;
+    const fps = 30;
     const interval = 1000 / fps;
     const duration = video.duration * 1000;
     const totalFrames = Math.floor(duration / interval);
@@ -139,16 +140,23 @@ export function ViewerPanel({
 
       await new Promise<void>((res) => {
         const seekHandler = () => {
-          requestAnimationFrame(async () => {
+          requestAnimationFrame(() => {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const base64 = canvas.toDataURL("image/jpeg").split(",")[1];
-            ws.send(
-              JSON.stringify({
-                type: "frame",
-                data: { session_id: buildingId, frame: base64 },
-              })
-            );
-            await waitForFrameAck();
+            pendingVideoFrames.current.push(base64);
+            if (
+              !isSendingVideoFrame.current &&
+              pendingVideoFrames.current.length > 0
+            ) {
+              isSendingVideoFrame.current = true;
+              const nextFrame = pendingVideoFrames.current.shift();
+              if (nextFrame) {
+                sendMessage({
+                  type: "frame",
+                  data: { session_id: buildingId, frame: nextFrame },
+                });
+              }
+            }
             res();
           });
         };
@@ -162,9 +170,29 @@ export function ViewerPanel({
     setIsUploading(false);
   };
 
-  const handleRealtimeStreaming = async () => {
-    if (!isSessionActive || !ws || ws.readyState !== WebSocket.OPEN) return;
+  const sendRealtimeFrame = () => {
+    if (!latestVideoFrameRef.current || !ws) return;
 
+    const video = latestVideoFrameRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ws.send(
+      JSON.stringify({
+        type: "frame",
+        data: {
+          session_id: buildingId,
+          frame: canvas.toDataURL("image/jpeg").split(",")[1],
+        },
+      })
+    );
+  };
+
+  const handleRealtimeStreaming = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     streamRef.current = stream;
 
@@ -173,28 +201,8 @@ export function ViewerPanel({
     video.muted = true;
     await video.play();
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    canvas.width = 640;
-    canvas.height = 480;
-
-    const sendLoop = async () => {
-      if (!isSessionActive || !streamRef.current) return;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const base64 = canvas.toDataURL("image/jpeg").split(",")[1];
-      ws.send(
-        JSON.stringify({
-          type: "frame",
-          data: { session_id: buildingId, frame: base64 },
-        })
-      );
-      await waitForFrameAck();
-      setTimeout(sendLoop, 1000); // 1fps
-    };
-
-    sendLoop();
+    latestVideoFrameRef.current = video;
+    sendRealtimeFrame();
   };
 
   useEffect(() => {
@@ -203,35 +211,35 @@ export function ViewerPanel({
     }
   }, [mode, isSessionActive]);
 
+  const handleVideoUploadWrapper = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !isSessionActive || !ws || ws.readyState !== WebSocket.OPEN)
+      return;
+
+    stopStream();
+    setMode("video");
+
+    await handleVideoUpload(file);
+
+    isSendingVideoFrame.current = false;
+    pendingVideoFrames.current = [];
+
+    setMode("realtime");
+    await handleRealtimeStreaming();
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <Button
-          onClick={() => setMode("video")}
-          variantIntent="secondary"
-          disabled={isUploading || !isConnected || mode === "video"}
-        >
-          Video 모드
-        </Button>
-        <Button
-          onClick={() => setMode("realtime")}
-          variantIntent="secondary"
-          disabled={isUploading || !isConnected || mode === "realtime"}
-        >
-          Real-time 모드
-        </Button>
+      <div className="flex justify-between items-center">
+        <input
+          type="file"
+          accept="video/*"
+          onChange={handleVideoUploadWrapper}
+          disabled={!isSessionActive || isUploading}
+        />
       </div>
-
-      {mode === "video" && (
-        <div className="flex justify-between items-center">
-          <input
-            type="file"
-            accept="video/*"
-            onChange={handleVideoUpload}
-            disabled={!isSessionActive || isUploading}
-          />
-        </div>
-      )}
 
       <Button
         onClick={() =>

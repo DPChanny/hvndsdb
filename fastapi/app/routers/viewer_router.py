@@ -40,7 +40,6 @@ async def viewer_route(websocket: WebSocket):
                     client_id, EndSessionRequestDTO.model_validate(dto_data)
                 )
             elif dto_type == FrameDTO.type:
-                logger.info(f"Received frame")
                 await frame_service(
                     client_id, FrameDTO.model_validate(dto_data)
                 )

@@ -24,10 +24,10 @@ class DeblurGSSession:
         )
 
     def start_deblur_gs_task(
-        self,
-        frames_url: str,
-        colmap_url: str,
-        deblur_gs_url: Optional[str] = None,
+            self,
+            frames_url: str,
+            colmap_url: str,
+            deblur_gs_url: Optional[str] = None,
     ):
         from tasks import deblur_gs_task
 
@@ -40,7 +40,7 @@ class DeblurGSSession:
             )
         )
 
-    async def cancel_train_task(self):
+    async def cancel_deblur_gs_task(self):
         if self._deblur_gs_task:
             self._deblur_gs_task.cancel()
             try:

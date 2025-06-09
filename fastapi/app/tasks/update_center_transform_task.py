@@ -4,7 +4,7 @@ from pyglm import glm
 
 from fastapi.logger import logger
 
-FPS = 10
+FPS = 20
 ROTATION_SPEED = 60
 
 

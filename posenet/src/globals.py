@@ -93,7 +93,15 @@ class PosenetSession:
             )
         )
 
-    async def cancel_train_task(self):
+    async def cancel_posenet(self):
+        if self._downloader_task:
+            self._downloader_task.cancel()
+            try:
+                await self._downloader_task
+            except asyncio.CancelledError:
+                pass
+            self._downloader_task = None
+
         if self._train_task:
             self._train_task.cancel()
             try:

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BuildingListResponseDTO, BuildingDetailResponseDTO } from "@/types";
 
-const API_BASE_URL = "http://localhost:8000/api/building";
+const API_BASE_URL = `http://${process.env.NEXT_PUBLIC_FASTAPI_HOST}:${process.env.NEXT_PUBLIC_FASTAPI_PORT}/api/building`;
 
 export const useBuildingList = () => {
   return useQuery<BuildingListResponseDTO>({

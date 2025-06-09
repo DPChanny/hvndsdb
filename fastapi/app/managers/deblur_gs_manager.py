@@ -15,7 +15,7 @@ class DeblurGSClient(WebsocketClient):
         return len(self._sessions)
 
     async def start_session(
-        self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
+            self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
     ):
         await super().start_session(building_id, dto)
 
@@ -62,8 +62,8 @@ class DeblurGSManager(WebSocketManager):
                 return client_id
 
             if (
-                self.get_client(client_id).get_session_count()
-                < self.get_client(selected_client_id).get_session_count()
+                    self.get_client(client_id).get_session_count()
+                    < self.get_client(selected_client_id).get_session_count()
             ):
                 selected_client_id = client_id
 

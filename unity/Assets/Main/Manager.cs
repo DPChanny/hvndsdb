@@ -38,10 +38,10 @@ namespace Main
                         await Service.SetPlyService(JsonUtility.FromJson<WebSocketBaseDto<SetPlyDto>>(message).data);
                         break;
                     case "set_camera_position":
-                        await Service.SetCameraPositionService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraPositionDto>>(message).data);
+                        Service.SetCameraPositionService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraPositionDto>>(message).data);
                         break;
                     case "set_camera_rotation":
-                        await Service.SetCameraRotationService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraRotationDto>>(message).data);
+                        Service.SetCameraRotationService(JsonUtility.FromJson<WebSocketBaseDto<SetCameraRotationDto>>(message).data);
                         break;
                     case "end_session":
                         await Service.EndSessionService(JsonUtility.FromJson<WebSocketBaseDto<EndSessionDto>>(message).data);

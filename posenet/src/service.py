@@ -37,7 +37,7 @@ def start_train_service(dto: StartTrainDTO):
 
 
 async def cancel_session_service(dto: CancelSessionDTO):
-    await get_client().get_session(dto.session_id).cancel_train_task()
+    await get_client().get_session(dto.session_id).cancel_posenet()
 
     await get_client().send(
         BaseWebSocketDTO[CancelSessionCompleteDTO](

@@ -28,6 +28,7 @@ class PosenetClient(WebsocketClient):
         )
 
     async def end_session(self, building_id: str, dto: BaseWebSocketDTO):
+        self.get_session(building_id).set_ready()
         await self.get_session(building_id).put_progress(None)
         await super().end_session(building_id, dto)
 

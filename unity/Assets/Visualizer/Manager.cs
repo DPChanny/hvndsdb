@@ -7,7 +7,6 @@ using GaussianSplatting.Runtime;
 using Main;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 using UnityEngine.Serialization;
 
 namespace Visualizer
@@ -16,20 +15,35 @@ namespace Visualizer
     {
         private const int Width = 960;
         private const int Height = 540;
+        private const float MaxFPS = 30f;
 
         public string sessionId;
 
         [SerializeField] private Camera targetCamera;
-
         [FormerlySerializedAs("renderers")] [SerializeField]
         private GaussianSplatRenderer[] gsrs;
 
-        private const float MaxFPS = 5;
-        private float _lastSendFrame;
+        private float _frameTimer;
 
-        private void Update()
+        private RenderTexture _sharedRT;
+        private Texture2D _readbackTex;
+
+        private void Start()
         {
-            _lastSendFrame += Time.deltaTime;
+            _sharedRT = new RenderTexture(Width, Height, 24);
+            _readbackTex = new Texture2D(Width, Height, TextureFormat.RGB24, false);
+        }
+
+        private async void Update()
+        {
+            if (string.IsNullOrWhiteSpace(sessionId)) return;
+            
+            _frameTimer += Time.deltaTime;
+            if (_frameTimer >= 1f / MaxFPS)
+            {
+                _frameTimer = 0f;
+                await SendFrame();
+            }
         }
 
         public async Task SetPly(string plyUrl)
@@ -45,40 +59,28 @@ namespace Visualizer
 
             var editor = ScriptableObject.CreateInstance<GaussianSplatAssetCreatorEditor>();
 
-            var mInputFile =
-                typeof(GaussianSplatAssetCreatorEditor).GetField("m_InputFile",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-            var mOutputFolder = typeof(GaussianSplatAssetCreatorEditor).GetField("m_OutputFolder",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            var mImportCameras = typeof(GaussianSplatAssetCreatorEditor).GetField("m_ImportCameras",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            var mQuality =
-                typeof(GaussianSplatAssetCreatorEditor).GetField("m_Quality",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-
             string assetPath = "Assets/GaussianAssets/" + sessionId;
-            
-            mInputFile?.SetValue(editor, plyPath);
-            mOutputFolder?.SetValue(editor, assetPath);
-            mImportCameras?.SetValue(editor, true);
-            mQuality?.SetValue(editor, 2);
 
-            typeof(GaussianSplatAssetCreatorEditor)
-                .GetMethod("ApplyQualityLevel", BindingFlags.NonPublic | BindingFlags.Instance)
+            typeof(GaussianSplatAssetCreatorEditor).GetField("m_InputFile", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(editor, plyPath);
+            typeof(GaussianSplatAssetCreatorEditor).GetField("m_OutputFolder", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(editor, assetPath);
+            typeof(GaussianSplatAssetCreatorEditor).GetField("m_ImportCameras", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(editor, true);
+            typeof(GaussianSplatAssetCreatorEditor).GetField("m_Quality", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(editor, 2);
+
+            typeof(GaussianSplatAssetCreatorEditor).GetMethod("ApplyQualityLevel", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.Invoke(editor, null);
-
-            typeof(GaussianSplatAssetCreatorEditor)
-                .GetMethod("CreateAsset", BindingFlags.NonPublic | BindingFlags.Instance)
+            typeof(GaussianSplatAssetCreatorEditor).GetMethod("CreateAsset", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.Invoke(editor, null);
 
             AssetDatabase.Refresh();
-            
-            var guids = AssetDatabase.FindAssets("t:Object", new[] { assetPath });
 
+            var guids = AssetDatabase.FindAssets("t:Object", new[] { assetPath });
             foreach (var guid in guids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-
                 if (!path.EndsWith(".asset")) continue;
 
                 var asset = AssetDatabase.LoadAssetAtPath<GaussianSplatAsset>(path);
@@ -89,56 +91,57 @@ namespace Visualizer
             }
 
             await Task.Yield();
-            await SendFrame();
         }
 
-        public async Task SetCameraPosition(Vector3 position)
+        public void SetCameraPosition(Vector3 position)
         {
             targetCamera.transform.position = position;
-
-            await SendFrame();
         }
 
-        public async Task SetCameraRotation(Quaternion rotation)
+        public void SetCameraRotation(Quaternion rotation)
         {
             targetCamera.transform.rotation = rotation;
-
-            await SendFrame();
         }
 
         private async Task SendFrame()
         {
-            if (_lastSendFrame < 1 / MaxFPS)
-                return;
-            
-            _lastSendFrame = 0;
-            
-            var rt = new RenderTexture(Width, Height, 24);
-            targetCamera.targetTexture = rt;
+            // Render
+            targetCamera.targetTexture = _sharedRT;
             targetCamera.Render();
-
-            RenderTexture.active = rt;
-
-            var tex = new Texture2D(Width, Height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
-            tex.Apply();
-
             targetCamera.targetTexture = null;
+
+            // Read pixels
+            RenderTexture.active = _sharedRT;
+            _readbackTex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            _readbackTex.Apply();
             RenderTexture.active = null;
-            Destroy(rt);
 
-            var jpgBytes = tex.EncodeToJPG();
-            Destroy(tex);
+            // Encode to base64
+            byte[] jpgBytes = _readbackTex.EncodeToJPG();
+            string base64 = Convert.ToBase64String(jpgBytes);
 
-            var base64 = Convert.ToBase64String(jpgBytes);
-
+            // Send via WebSocket
             await Main.Manager.WebSocket.SendText(
                 JsonUtility.ToJson(
                     new WebSocketBaseDto<FrameDto>(
                         "frame",
-                        new FrameDto(
-                            sessionId,
-                            base64))));
+                        new FrameDto(sessionId, base64))));
+        }
+
+        private void OnDestroy()
+        {
+            if (_sharedRT != null)
+            {
+                _sharedRT.Release();
+                Destroy(_sharedRT);
+                _sharedRT = null;
+            }
+
+            if (_readbackTex != null)
+            {
+                Destroy(_readbackTex);
+                _readbackTex = null;
+            }
         }
     }
 }

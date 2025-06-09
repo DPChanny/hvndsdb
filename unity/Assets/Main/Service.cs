@@ -8,7 +8,7 @@ namespace Main
 {
     public static class Service
     {
-        public static async Task SetCameraPositionService(SetCameraPositionDto dto)
+        public static void SetCameraPositionService(SetCameraPositionDto dto)
         {
             var scene = Manager.SessionToScene[dto.session_id];
             var roots = scene.GetRootGameObjects();
@@ -17,12 +17,12 @@ namespace Main
             {
                 var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
                 if (!manager) continue;
-                await manager.SetCameraPosition(new Vector3(dto.x, dto.y, dto.z));
+                manager.SetCameraPosition(new Vector3(dto.x, dto.y, dto.z));
                 break;
             }
         }
 
-        public static async Task SetCameraRotationService(SetCameraRotationDto dto)
+        public static void SetCameraRotationService(SetCameraRotationDto dto)
         {
             var scene = Manager.SessionToScene[dto.session_id];
             var roots = scene.GetRootGameObjects();
@@ -31,7 +31,7 @@ namespace Main
             {
                 var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
                 if (!manager) continue;
-                await manager.SetCameraRotation(new Quaternion(dto.x, dto.y, dto.z, dto.w));
+                manager.SetCameraRotation(new Quaternion(dto.x, dto.y, dto.z, dto.w));
                 break;
             }
         }
@@ -78,7 +78,18 @@ namespace Main
         }
 
         public static async Task EndSessionService(EndSessionDto dto)
-        { 
+        {
+            var scene = Manager.SessionToScene[dto.session_id];
+            var roots = scene.GetRootGameObjects();
+
+            foreach (var rootObj in roots)
+            {
+                var manager = rootObj.GetComponentInChildren<Visualizer.Manager>();
+                if (!manager) continue;
+                manager.sessionId = null;
+                break;
+            }
+            
             var unloadOperation = SceneManager.UnloadSceneAsync(Manager.SessionToScene[dto.session_id]);
             if (unloadOperation != null)
                 await unloadOperation;
