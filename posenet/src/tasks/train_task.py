@@ -11,11 +11,11 @@ SAVE_CHECKPOINT_INTERVAL = 25
 
 
 async def run(
-        session_id: str,
-        colmap_path: str,
-        frames_path: str,
-        posenet_path: str,
-        iteration: int = ITERATION,
+    session_id: str,
+    colmap_path: str,
+    frames_path: str,
+    posenet_path: str,
+    iteration: int = ITERATION,
 ):
     loop = asyncio.get_running_loop()
     process = None

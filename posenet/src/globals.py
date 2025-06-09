@@ -48,8 +48,6 @@ class PosenetSession:
         self._model = posenet.utils.predict_pose.load_model(model_path)
 
     async def infer_frame(self, frame: str):
-        print("hi" + str(self._model))
-
         if frame.startswith("data:image"):
             frame = frame.split(",")[1]
 

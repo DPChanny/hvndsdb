@@ -39,7 +39,6 @@ async def router():
         async for request in websocket:
             try:
                 message = json.loads(request)
-                print(f"Received {message}")
                 dto_type = message["type"]
                 dto_data = message.get("data", {})
 

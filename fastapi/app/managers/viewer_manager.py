@@ -2,7 +2,7 @@ import asyncio
 import uuid
 
 from dtos.unity_dto import SetCameraPositionDTO, SetCameraRotationDTO
-from dtos.viewer_dto import FrameDTO
+from dtos.viewer_dto import FrameDTO, FrameCompleteDTO
 from dtos.base_dto import BaseWebSocketDTO
 
 from managers.web_socket_manager import (
@@ -34,7 +34,22 @@ class ViewerSession(WebsocketSession):
         self._posenet_session: PosenetSession | None = None
         self._posenet_client_id = None
         self._posenet_session_id = None
-        self._viewer_task = asyncio.Task
+
+        async def update_frame_task():
+            while True:
+                frame = await self._render_session.get_frame()
+                if frame is None:
+                    break
+                await self._client.send(
+                    BaseWebSocketDTO[FrameDTO](
+                        data=FrameDTO(
+                            session_id=self._session_id,
+                            frame=frame,
+                        )
+                    )
+                )
+
+        asyncio.create_task(update_frame_task())
 
     async def init_internal_session(self, building_id):
         from managers import unity_manager
@@ -96,12 +111,10 @@ class ViewerSession(WebsocketSession):
                 )
             )
         )
+
         await self._client.send(
-            BaseWebSocketDTO[FrameDTO](
-                data=FrameDTO(
-                    session_id=self._session_id,
-                    frame=await self._render_session.get_frame(),
-                )
+            BaseWebSocketDTO[FrameCompleteDTO](
+                data=FrameCompleteDTO(session_id=self._session_id)
             )
         )
 

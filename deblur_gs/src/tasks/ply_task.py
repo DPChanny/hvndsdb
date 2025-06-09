@@ -7,9 +7,9 @@ from utils import get_last_ply_folder
 
 
 async def run(
-        building_id: str,
-        ply_path: str,
-        interval: float = 5.0,
+    building_id: str,
+    ply_path: str,
+    interval: float = 5.0,
 ):
     try:
         last_last_ply_folder = None

@@ -9,24 +9,26 @@ using UnityEngine.SceneManagement;
 
 namespace Main
 {
-
     public class Manager : MonoBehaviour
     {
         public static readonly Dictionary<string, Scene> SessionToScene = new();
-        
         public static WebSocket WebSocket;
+
+        private bool _isConnecting;
+        private bool _shouldReconnect = true;
+        private const float RetryDelay = 3f;
 
         private void Awake()
         {
-            PlayerSettings.runInBackground = true;   
+            PlayerSettings.runInBackground = true;
         }
 
-        private static async Task HandleMessage(string message)
+        private async Task HandleMessage(string message)
         {
             try
             {
                 var json = JsonUtility.FromJson<WebSocketBase>(message);
-                
+
                 switch (json.type)
                 {
                     case "start_session":
@@ -52,30 +54,83 @@ namespace Main
             }
         }
 
-        private async void Start()
+        private async Task ConnectWebSocket()
         {
-            try
+            if (_isConnecting) return;
+
+            _isConnecting = true;
+
+            while (_shouldReconnect && (WebSocket == null || WebSocket.State != WebSocketState.Open))
             {
-                WebSocket = new WebSocket("ws://127.0.0.1:8000/ws/unity");
+                try
+                {
+                    WebSocket = new WebSocket("ws://127.0.0.1:8000/ws/unity");
 
-                WebSocket.OnOpen += () => { Debug.Log("Connected"); };
+                    WebSocket.OnOpen += () =>
+                    {
+                        Debug.Log("[WebSocket] Connected");
+                    };
 
-                WebSocket.OnError += (e) => { Debug.LogError($"[WebSocket] Error: {e}"); };
+                    WebSocket.OnError += (e) =>
+                    {
+                        Debug.LogError($"[WebSocket] Error: {e}");
+                    };
 
-                WebSocket.OnClose += (e) => { Debug.Log($"[WebSocket] Connection closed with code {e}"); };
+                    WebSocket.OnClose += async (e) =>
+                    {
+                        Debug.LogWarning($"[WebSocket] Closed with code {e}");
+                        await RetryConnection();
+                    };
 
-                WebSocket.OnMessage += (bytes) => { _ = HandleMessage(Encoding.UTF8.GetString(bytes)); };
+                    WebSocket.OnMessage += (bytes) =>
+                    {
+                        _ = HandleMessage(Encoding.UTF8.GetString(bytes));
+                    };
 
-                await WebSocket.Connect();
+                    await WebSocket.Connect();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[WebSocket] Connect failed: {e.Message}");
+                }
+
+                if (WebSocket == null || WebSocket.State != WebSocketState.Open)
+                {
+                    Debug.Log("[WebSocket] Retry in a few seconds...");
+                    await Task.Delay(TimeSpan.FromSeconds(RetryDelay));
+                }
             }
-            catch (Exception e)
+
+            _isConnecting = false;
+        }
+
+        private async Task RetryConnection()
+        {
+            if (_shouldReconnect)
             {
-                Debug.LogError(e);
+                Debug.Log("[WebSocket] Attempting to reconnect...");
+                await ConnectWebSocket();
             }
         }
+
+        private async void Start()
+        {
+            await ConnectWebSocket();
+        }
+
         private void Update()
         {
             WebSocket?.DispatchMessageQueue();
+        }
+
+        private async void OnApplicationQuit()
+        {
+            _shouldReconnect = false;
+
+            if (WebSocket != null)
+            {
+                await WebSocket.Close();
+            }
         }
     }
 }

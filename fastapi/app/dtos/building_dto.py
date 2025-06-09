@@ -19,6 +19,7 @@ class BuildingDetailDTO(BuildingDTO, TimeMixin):
     colmap: bool
     deblur_gs: bool
     ply: bool
+    posenet: bool
 
 
 class AddBuildingRequestDTO(BaseModel):

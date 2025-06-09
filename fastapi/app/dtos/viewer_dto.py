@@ -14,3 +14,7 @@ class EndSessionRequestDTO(BaseSessionDataDTO):
 class FrameDTO(BaseSessionDataDTO):
     type: ClassVar[str] = "frame"
     frame: str
+
+
+class FrameCompleteDTO(BaseSessionDataDTO):
+    type: ClassVar[str] = "frame_complete"

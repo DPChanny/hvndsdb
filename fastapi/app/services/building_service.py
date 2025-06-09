@@ -37,6 +37,7 @@ def get_building_detail_service(building_id: str, db: Session):
             deblur_gs=is_key_exists(building_id + "/deblur_gs.zip"),
             ply=is_key_exists(building_id + "/point_cloud.ply"),
             analyzing=analyzer_manager.has_analyzer_task(building_id),
+            posenet=is_key_exists(building_id + "/posenet.zip"),
         )
 
         return GetBuildingDetailResponseDTO(
@@ -84,7 +85,7 @@ def get_building_list_service(dto: GetBuildingListRequestDTO, db: Session):
 
 
 def update_building_service(
-    building_id: str, dto: UpdateBuildingRequestDTO, db: Session
+        building_id: str, dto: UpdateBuildingRequestDTO, db: Session
 ):
     try:
         building = (

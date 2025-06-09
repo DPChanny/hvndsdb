@@ -4,10 +4,10 @@ from typing import Optional
 
 
 async def run(
-        session_id: str,
-        frames_url: str,
-        colmap_url: str,
-        posenet_url: Optional[str] = None,
+    session_id: str,
+    frames_url: str,
+    colmap_url: str,
+    posenet_url: Optional[str] = None,
 ):
     from envs import TEMP
     from dto import BaseSessionReadyDTO, BaseWebSocketDTO
