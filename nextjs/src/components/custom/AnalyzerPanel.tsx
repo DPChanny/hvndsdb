@@ -171,14 +171,14 @@ export function AnalyzerPanel({
 
       {isSessionActive ? (
         <>
-          {/* 로그 3개를 전체 스크롤 가능한 영역으로 감쌈 */}
           <div className="max-h-[300px] overflow-auto space-y-4 pr-2">
-            <ProgressPanel title="전체 진행 상황" logs={progressLog} />
-            <ProgressPanel title="DeblurGS 진행 상황" logs={deblurGSLog} />
-            <ProgressPanel title="PoseNet 진행 상황" logs={posenetLog} />
+            <div className="grid grid-rows-3 gap-4">
+              <ProgressPanel title="전체 진행 상황" logs={progressLog} />
+              <ProgressPanel title="DeblurGS 진행 상황" logs={deblurGSLog} />
+              <ProgressPanel title="PoseNet 진행 상황" logs={posenetLog} />
+            </div>
           </div>
 
-          {/* 스크롤 외부에 고정된 이미지 영역 */}
           <div className="grid grid-rows-2 gap-4">
             <ImageDisplay label="Around Frame" src={aroundImage} />
             <ImageDisplay label="Center Frame" src={centerImage} />

@@ -102,6 +102,7 @@ export function ViewerPanel({
       ws.removeEventListener("message", handleMessage);
       stopStream();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ws, buildingId, sendMessage, onClose, mode]);
 
   const stopStream = () => {
@@ -210,6 +211,7 @@ export function ViewerPanel({
     if (mode === "realtime" && isSessionActive) {
       handleRealtimeStreaming();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, isSessionActive]);
 
   const handleVideoUploadWrapper = async (
