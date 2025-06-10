@@ -6,6 +6,10 @@
   --color-primary-hover: #1d4ed8;
   --color-primary-focus: #3b82f6;
 
+  --color-secondary: #6b7280; /* gray-500 */
+  --color-secondary-hover: #4b5563; /* gray-600 */
+  --color-secondary-focus: #9ca3af; /* gray-400 */
+
   --color-error: #dc2626;
   --color-error-hover: #b91c1c;
   --color-error-focus: #ef4444;

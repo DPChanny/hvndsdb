@@ -6,20 +6,23 @@ import websockets
 
 from dto import (
     UploadDTO,
-    StartSessionDTO,
     CancelSessionDTO,
     BaseEndSessionDTO,
     FrameDTO,
     StartTrainDTO,
+    StartTrainSessionDTO,
+    StartInferSessionDTO,
+    BaseStartSessionDTO,
 )
 from envs import SERVER_URL, WS_KEY
 from service import (
-    start_session_service,
     cancel_session_service,
     upload_service,
     end_session_service,
     frame_service,
     start_train_service,
+    start_train_session_service,
+    start_infer_session_service,
 )
 from utils import generate_hmac_signature
 
@@ -42,8 +45,15 @@ async def router():
                 dto_type = message["type"]
                 dto_data = message.get("data", {})
 
-                if dto_type == StartSessionDTO.type:
-                    start_session_service(StartSessionDTO.parse_obj(dto_data))
+                if dto_type == BaseStartSessionDTO.type:
+                    if dto_data["session_type"] == "train":
+                        start_train_session_service(
+                            StartTrainSessionDTO.parse_obj(dto_data)
+                        )
+                    else:
+                        start_infer_session_service(
+                            StartInferSessionDTO.parse_obj(dto_data)
+                        )
                 elif dto_type == StartTrainDTO.type:
                     start_train_service(StartTrainDTO.parse_obj(dto_data))
                 elif dto_type == CancelSessionDTO.type:

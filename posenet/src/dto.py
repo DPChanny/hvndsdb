@@ -42,10 +42,16 @@ class BaseEndSessionDTO(BaseSessionDataDTO):
     type: ClassVar[str] = "end_session"
 
 
-class StartSessionDTO(BaseStartSessionDTO):
+class StartTrainSessionDTO(BaseStartSessionDTO):
+    session_type: str = "train"
     frames_url: str
     colmap_url: str
     posenet_url: Optional[str] = None
+
+
+class StartInferSessionDTO(BaseStartSessionDTO):
+    session_type: str = "infer"
+    posenet_url: str
 
 
 class StartTrainDTO(BaseSessionDataDTO):

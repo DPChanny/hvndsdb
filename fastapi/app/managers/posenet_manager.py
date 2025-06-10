@@ -1,7 +1,11 @@
 import asyncio
 
 from dtos.base_dto import BaseWebSocketDTO
-from dtos.posenet_dto import CancelSessionDTO, StartSessionDTO
+from dtos.posenet_dto import (
+    CancelSessionDTO,
+    StartTrainSession,
+    StartInferSession,
+)
 from managers.web_socket_manager import (
     WebSocketManager,
     WebsocketClient,
@@ -15,7 +19,7 @@ class PosenetClient(WebsocketClient):
         return len(self._sessions)
 
     async def start_session(
-            self, building_id: str, dto: BaseWebSocketDTO[StartSessionDTO]
+            self, building_id: str, dto: BaseWebSocketDTO[StartTrainSession]
     ):
         await super().start_session(building_id, dto)
 
@@ -59,7 +63,9 @@ class PosenetManager(WebSocketManager):
     def get_client(self, client_id: str) -> PosenetClient:
         return super().get_client(client_id)
 
-    async def start_session(self, session_id: str, building_id: str) -> str:
+    async def start_session(
+            self, session_id: str, dto: BaseWebSocketDTO
+    ) -> str:
         if not self._clients:
             raise LookupError("No clients connected")
 
@@ -74,11 +80,16 @@ class PosenetManager(WebSocketManager):
             ):
                 selected_client_id = client_id
 
-        await self.get_client(selected_client_id).start_session(
-            session_id,
-            BaseWebSocketDTO[StartSessionDTO](
-                data=StartSessionDTO(
-                    session_id=session_id,
+        await self.get_client(selected_client_id).start_session(session_id, dto)
+
+        return selected_client_id
+
+    async def start_train_session(self, building_id: str) -> str:
+        return await self.start_session(
+            building_id,
+            BaseWebSocketDTO[StartTrainSession](
+                data=StartTrainSession(
+                    session_id=building_id,
                     frames_url=get_presigned_download_url(
                         building_id + "/frames.zip"
                     ),
@@ -94,15 +105,22 @@ class PosenetManager(WebSocketManager):
             ),
         )
 
-        return selected_client_id
-
-    async def start_train_session(self, building_id: str) -> str:
-        return await self.start_session(building_id, building_id)
-
     async def start_infer_session(
             self, session_id: str, building_id: str
     ) -> str:
-        return await self.start_session(session_id, building_id)
+        return await self.start_session(
+            session_id,
+            BaseWebSocketDTO[StartInferSession](
+                data=StartInferSession(
+                    session_id=session_id,
+                    posenet_url=(
+                        get_presigned_download_url(building_id + "/posenet.zip")
+                        if is_key_exists(building_id + "/posenet.zip")
+                        else None
+                    ),
+                ),
+            ),
+        )
 
     async def cancel_session(self, session_id: str):
         for client in self._clients.values():

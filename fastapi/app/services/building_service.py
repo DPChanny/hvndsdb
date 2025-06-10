@@ -85,7 +85,7 @@ def get_building_list_service(dto: GetBuildingListRequestDTO, db: Session):
 
 
 def update_building_service(
-        building_id: str, dto: UpdateBuildingRequestDTO, db: Session
+    building_id: str, dto: UpdateBuildingRequestDTO, db: Session
 ):
     try:
         building = (

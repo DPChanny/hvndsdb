@@ -6,7 +6,6 @@ from downloader import (
 )
 
 from dto import (
-    StartSessionDTO,
     BaseWebSocketDTO,
     UploadCompleteDTO,
     UploadDTO,
@@ -15,20 +14,35 @@ from dto import (
     BaseEndSessionDTO,
     FrameDTO,
     StartTrainDTO,
+    StartTrainSessionDTO,
+    StartInferSessionDTO,
+    BaseStartSessionDTO,
 )
 from envs import TEMP
 from globals import get_client
 from utils import clean_posenet
 
 
-def start_session_service(dto: StartSessionDTO):
+def start_session_service(dto: BaseStartSessionDTO):
     if os.path.isdir(os.path.join(TEMP, dto.session_id)):
         shutil.rmtree(os.path.join(TEMP, dto.session_id))
 
     get_client().start_session(dto.session_id)
 
-    get_client().get_session(dto.session_id).start_downloader_task(
+
+def start_train_session_service(dto: StartTrainSessionDTO):
+    start_session_service(dto)
+
+    get_client().get_session(dto.session_id).start_train_download_task(
         dto.frames_url, dto.colmap_url, dto.posenet_url
+    )
+
+
+def start_infer_session_service(dto: StartInferSessionDTO):
+    start_session_service(dto)
+
+    get_client().get_session(dto.session_id).start_infer_download_task(
+        dto.posenet_url
     )
 
 
@@ -47,11 +61,12 @@ async def cancel_session_service(dto: CancelSessionDTO):
 
 
 async def upload_service(dto: UploadDTO):
-    if os.path.exists(os.path.join(TEMP, dto.session_id, "posenet")):
-        clean_posenet(os.path.join(TEMP, dto.session_id, "posenet"))
+    posenet_path = os.path.join(TEMP, dto.session_id, "posenet")
+    if os.path.isdir(posenet_path) and len(os.listdir(posenet_path)) != 0:
+        clean_posenet(posenet_path)
 
         await upload_folder_to_presigned_url(
-            dto.posenet_url, os.path.join(TEMP, dto.session_id, "posenet"), TEMP
+            dto.posenet_url, posenet_path, TEMP
         )
 
     await get_client().send(

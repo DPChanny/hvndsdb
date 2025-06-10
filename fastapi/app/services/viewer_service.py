@@ -13,7 +13,7 @@ from managers.viewer_manager import ViewerSession
 
 
 async def start_session_request_service(
-        client_id: str, dto: StartSessionRequestDTO
+    client_id: str, dto: StartSessionRequestDTO
 ):
     if not viewer_manager.get_client(client_id).has_session(dto.session_id):
         await viewer_manager.get_client(client_id).start_session(
@@ -31,7 +31,7 @@ async def start_session_request_service(
 
 
 async def end_session_request_service(
-        client_id: str, dto: EndSessionRequestDTO
+    client_id: str, dto: EndSessionRequestDTO
 ):
     await viewer_manager.get_client(client_id).end_session(
         dto.session_id,
@@ -43,9 +43,9 @@ async def end_session_request_service(
 
 async def frame_service(client_id: str, dto: FrameDTO):
     try:
-        session: ViewerSession = viewer_manager.get_client(client_id).get_session(
-            dto.session_id
-        )
+        session: ViewerSession = viewer_manager.get_client(
+            client_id
+        ).get_session(dto.session_id)
         await session.put_frame(dto.frame)
     except LookupError:
         pass

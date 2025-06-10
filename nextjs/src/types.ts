@@ -15,6 +15,7 @@ export type BuildingDetail = {
   colmap: boolean;
   deblur_gs: boolean;
   ply: boolean;
+  posenet: boolean;
   analyzing: boolean;
 };
 

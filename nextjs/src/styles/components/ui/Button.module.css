@@ -37,16 +37,18 @@
 
 /* === Variant: Secondary === */
 .button--secondary {
-  background-color: var(--color-muted);
+  background-color: var(--color-secondary);
   color: var(--color-text-inverse);
 }
-
 .button--secondary:hover {
-  background-color: var(--color-muted-hover);
+  background-color: var(--color-secondary-hover);
 }
-
 .button--secondary:active {
-  background-color: var(--color-muted-focus);
+  background-color: var(--color-secondary-focus);
+}
+.button--secondary:disabled,
+.button--secondary.button--disabled {
+  background-color: var(--color-secondary);
 }
 
 /* === Variant: Destructive === */
@@ -108,8 +110,6 @@
   transform: none;
   box-shadow: none;
 }
-
-/* Optional: 색상 유지하려면 아래도 추가 */
 
 /* Disabled - Primary */
 .button--primary:disabled,

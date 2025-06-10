@@ -11,13 +11,13 @@ from posenet.model import PoseNet
 
 from dto import BaseWebSocketDTO, ProgressDTO, SixDOFDTO
 from envs import TEMP
-from tasks import download_task
+from tasks import train_download_task, infer_download_task
 
 
 class PosenetSession:
     def __init__(self, session_id: str):
         self._session_id = session_id
-        self._downloader_task: Optional[asyncio.Task] = None
+        self._download_task: Optional[asyncio.Task] = None
         self._train_task: Optional[asyncio.Task] = None
         self._model: Optional[PoseNet] = None
 
@@ -65,18 +65,25 @@ class PosenetSession:
             )
         )
 
-    def start_downloader_task(
+    def start_train_download_task(
             self,
             frames_url: str,
             colmap_url: str,
             posenet_url: Optional[str] = None,
     ):
-
-        self._downloader_task = asyncio.create_task(
-            download_task.run(
+        self._download_task = asyncio.create_task(
+            train_download_task.run(
                 self._session_id,
                 frames_url,
                 colmap_url,
+                posenet_url,
+            )
+        )
+
+    def start_infer_download_task(self, posenet_url: str):
+        self._download_task = asyncio.create_task(
+            infer_download_task.run(
+                self._session_id,
                 posenet_url,
             )
         )
@@ -94,13 +101,13 @@ class PosenetSession:
         )
 
     async def cancel_posenet(self):
-        if self._downloader_task:
-            self._downloader_task.cancel()
+        if self._download_task:
+            self._download_task.cancel()
             try:
-                await self._downloader_task
+                await self._download_task
             except asyncio.CancelledError:
                 pass
-            self._downloader_task = None
+            self._download_task = None
 
         if self._train_task:
             self._train_task.cancel()

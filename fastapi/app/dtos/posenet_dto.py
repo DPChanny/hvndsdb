@@ -6,10 +6,16 @@ from dtos.base_dto import (
 )
 
 
-class StartSessionDTO(BaseStartSessionDTO):
+class StartTrainSession(BaseStartSessionDTO):
+    session_type: str = "train"
     frames_url: str
     colmap_url: str
     posenet_url: Optional[str] = None
+
+
+class StartInferSession(BaseStartSessionDTO):
+    session_type: str = "infer"
+    posenet_url: str
 
 
 class StartTrainDTO(BaseSessionDataDTO):

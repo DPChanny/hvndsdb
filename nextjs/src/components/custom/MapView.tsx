@@ -80,7 +80,10 @@ export default function MapView({ buildings, onSelect, onAdd }: Props) {
           key={b.building_id}
           latitude={b.latitude}
           longitude={b.longitude}
-          onClick={() => onSelect(b)}
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+            onSelect(b);
+          }}
         />
       ))}
 
@@ -89,7 +92,8 @@ export default function MapView({ buildings, onSelect, onAdd }: Props) {
           latitude={addLocation.lat}
           longitude={addLocation.lng}
           color="red"
-          onClick={() => {
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
             onAdd(addLocation.lat, addLocation.lng);
             setAddLocation(null);
           }}

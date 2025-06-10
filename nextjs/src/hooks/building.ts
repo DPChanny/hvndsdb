@@ -58,17 +58,18 @@ export const useAddBuilding = () => {
     },
   });
 };
-
 type UseSampleUploadOptions = {
   buildingId: string;
   onSuccess?: () => void;
-  onError?: (e: Error) => void;
+  onError?: (e: { message: string }) => void;
+  onProgress?: (percent: number) => void;
 };
 
 export function useSampleUpload({
   buildingId,
   onSuccess,
   onError,
+  onProgress,
 }: UseSampleUploadOptions) {
   const mutation = useMutation({
     mutationFn: async (file: File) => {
@@ -78,15 +79,33 @@ export function useSampleUpload({
       if (!json.success) throw new Error(json.message);
       const uploadUrl = json.data as string;
 
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": "video/mp4",
-        },
-      });
+      // Upload via XMLHttpRequest to track progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", "video/mp4");
 
-      if (!uploadRes.ok) throw new Error("업로드 실패");
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable && onProgress) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error("업로드 실패"));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("네트워크 오류로 업로드 실패"));
+        xhr.send(file);
+      });
+    },
+    onMutate: () => {
+      onProgress?.(0);
     },
     onSuccess,
     onError,

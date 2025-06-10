@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 type SessionData = { session_id: string };
 type FrameData = { frame: string; session_id: string };
@@ -233,7 +234,7 @@ export function ViewerPanel({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <input
+        <Input
           type="file"
           accept="video/*"
           onChange={handleVideoUploadWrapper}
