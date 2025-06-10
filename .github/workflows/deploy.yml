@@ -1,0 +1,69 @@
+name: Deploy Full Stack to EC2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: 🔐 Setup SSH Key and Known Hosts
+        run: |
+          echo "=== Setting up SSH ==="
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          echo "=== Preview id_rsa ==="
+          head -n 5 ~/.ssh/id_rsa
+          
+          echo "=== Scanning host key ==="
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/two-hopes
+
+            echo "[+] Pull latest code (main repo)"
+            git pull origin master
+            
+            echo "[+] Rewriting .env file"
+            printf "%s\n" \
+              "# MYSQL" \
+              "MYSQL_HOST=${{ vars.MYSQL_HOST }}" \
+              "MYSQL_PORT=${{ vars.MYSQL_PORT }}" \
+              "MYSQL_USER=${{ vars.MYSQL_USER }}" \
+              "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" \
+              "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" \
+              "MYSQL_DATABASE=${{ vars.MYSQL_DATABASE }}" \
+              "" \
+              "# FastAPI" \
+              "FASTAPI_HOST=${{ vars.FASTAPI_HOST }}" \
+              "FASTAPI_PORT=${{ vars.FASTAPI_PORT }}" \
+              "" \
+              "# AWS" \
+              "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
+              "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
+              "AWS_REGION=${{ vars.AWS_REGION }}" \
+              "" \
+              "# AWS S3"\
+              "S3_BUCKET_NAME=${{ vars.S3_BUCKET_NAME }}" \
+              "" \
+              "WebSocket" \
+              "WS_KEY=${{ secrets.WS_KEY }}" \
+              > .env
+
+            echo "[+] Docker Compose build & restart"
+            docker compose down
+            docker compose up -d --build
+          EOF
